@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Care Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Breast Toggle Styles */
+        .breast-toggle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-label {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #4a5568;
+            min-width: 40px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 80px;
+            height: 40px;
+            background: #e2e8f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #e2e8f0;
+        }
+
+        .toggle-switch.active {
+            background: #48bb78;
+            border-color: #48bb78;
+        }
+
+        .toggle-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .toggle-switch.active .toggle-knob {
+            transform: translateX(40px);
+        }
+
+        .last-changed {
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* Nap Tracking Styles */
+        .nap-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nap-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            min-width: 150px;
+        }
+
+        .nap-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .nap-button:active {
+            transform: translateY(0);
+        }
+
+        .nap-button.stop {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+        }
+
+        .nap-button.stop:hover {
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.6);
+        }
+
+        .current-nap {
+            text-align: center;
+            color: #4a5568;
+            font-size: 0.95rem;
+        }
+
+        .nap-timer {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        /* Activity Log Styles */
+        .activity-log {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #48bb78;
+            position: relative;
+        }
+
+        .log-item.nap {
+            border-left-color: #667eea;
+        }
+
+        .log-item.breast {
+            border-left-color: #ed8936;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .log-type {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .log-time {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .log-details {
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        .edit-btn {
+            background: #e2e8f0;
+            border: none;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            color: #4a5568;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .edit-btn:hover {
+            background: #cbd5e0;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .close {
+            color: #a0aec0;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #4a5568;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        /* Summary Stats */
+        .summary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .toggle-wrapper {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .summary-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            color: #a0aec0;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        .empty-state::before {
+            content: "👶";
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>👶 Baby Care Tracker</h1>
+            <p>Track feeding and sleep for your little one</p>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="card">
+            <div class="summary-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="todayFeedings">0</div>
+                    <div class="stat-label">Feedings Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todayNaps">0</div>
+                    <div class="stat-label">Naps Today</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Breast Feeding Tracker -->
+        <div class="card">
+            <div class="card-title">🤱 Breast Feeding</div>
+            <div class="breast-toggle-container">
+                <div class="toggle-wrapper">
+                    <span class="toggle-label">Left</span>
+                    <div class="toggle-switch" id="breastToggle" onclick="toggleBreast()">
+                        <div class="toggle-knob"></div>
+                    </div>
+                    <span class="toggle-label">Right</span>
+                </div>
+                <div class="last-changed" id="lastChanged">
+                    Tap to record first feeding
+                </div>
+            </div>
+        </div>
+
+        <!-- Nap Tracker -->
+        <div class="card">
+            <div class="card-title">😴 Sleep Tracking</div>
+            <div class="nap-controls">
+                <button class="nap-button" id="napButton" onclick="toggleNap()">
+                    Start Nap
+                </button>
+                <div class="current-nap" id="napStatus" style="display: none;">
+                    <div>Nap in progress</div>
+                    <div class="nap-timer" id="napTimer">00:00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="card">
+            <div class="card-title">📋 Today's Activity</div>
+            <div class="activity-log" id="activityLog">
+                <div class="empty-state">
+                    No activities recorded yet today.<br>
+                    Start by logging a feeding or nap!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Nap Modal -->
+    <div id="editNapModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Edit Nap</span>
+                <span class="close" onclick="closeEditNapModal()">&times;</span>
+            </div>
+            <div class="form-group">
+                <label>Start Time</label>
+                <input type="datetime-local" id="napStartTime">
+            </div>
+            <div class="form-group">
+                <label>End Time (optional)</label>
+                <input type="datetime-local" id="napEndTime">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="deleteNap()">Delete</button>
+                <button class="btn btn-secondary" onclick="closeEditNapModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveNapEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let activities = JSON.parse(localStorage.getItem('babyActivities')) || [];
+        let currentNap = JSON.parse(localStorage.getItem('currentNap')) || null;
+        let breastSide = localStorage.getItem('lastBreastSide') || 'left';
+        let napTimer = null;
+        let editingNapId = null;
+
+        // Initialize app
+        function initApp() {
+            updateBreastToggle();
+            updateNapButton();
+            updateActivityLog();
+            updateSummaryStats();
+            
+            if (currentNap) {
+                startNapTimer();
+            }
+        }
+
+        // Breast feeding functions
+        function toggleBreast() {
+            breastSide = breastSide === 'left' ? 'right' : 'left';
+            localStorage.setItem('lastBreastSide', breastSide);
+            
+            // Log the feeding
+            const activity = {
+                id: Date.now(),
+                type: 'feeding',
+                side: breastSide,
+                timestamp: new Date().toISOString(),
+                date: new Date().toDateString()
+            };
+            
+            activities.unshift(activity);
+            saveActivities();
+            updateBreastToggle();
+            updateActivityLog();
+            updateSummaryStats();
+        }
+
+        function updateBreastToggle() {
+            const toggle = document.getElementById('breastToggle');
+            const lastChanged = document.getElementById('lastChanged');
+            
+            if (breastSide === 'right') {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+            
+            // Find last feeding
+            const lastFeeding = activities.find(a => a.type === 'feeding');
+            if (lastFeeding) {
+                const feedingTime = new Date(lastFeeding.timestamp);
+                const timeAgo = getTimeAgo(feedingTime);
+                lastChanged.textContent = `Last feeding: ${timeAgo}`;
+            } else {
+                lastChanged.textContent = 'Tap to record first feeding';
+            }
+        }
+
+        // Nap tracking functions
+        function toggleNap() {
+            if (currentNap) {
+                // End current nap
+                endNap();
+            } else {
+                // Start new nap
+                startNap();
+            }
+        }
+
+        function startNap() {
+            currentNap = {
+                id: Date.now(),
+                startTime: new Date().toISOString(),
+                date: new Date().toDateString()
+            };
+            
+            localStorage.setItem('currentNap', JSON.stringify(currentNap));
+            updateNapButton();
+            startNapTimer();
+        }
+
+        function endNap() {
+            if (!currentNap) return;
+            
+            const activity = {
+                id: currentNap.id,
+                type: 'nap',
+                startTime: currentNap.startTime,
+                endTime: new Date().toISOString(),
+                date: currentNap.date,
+                duration: Date.now() - new Date(currentNap.startTime).getTime()
+            };
+            
+            activities.unshift(activity);
+            saveActivities();
+            
+            currentNap = null;
+            localStorage.removeItem('currentNap');
+            
+            stopNapTimer();
+            updateNapButton();
+            updateActivityLog();
+            updateSummaryStats();
+        }
+
+        function updateNapButton() {
+            const napButton = document.getElementById('napButton');
+            const napStatus = document.getElementById('napStatus');
+            
+            if (currentNap) {
+                napButton.textContent = 'End Nap';
+                napButton.classList.add('stop');
+                napStatus.style.display = 'block';
+            } else {
+                napButton.textContent = 'Start Nap';
+                napButton.classList.remove('stop');
+                napStatus.style.display = 'none';
+            }
+        }
+
+        function startNapTimer() {
+            if (!currentNap) return;
+            
+            napTimer = setInterval(() => {
+                const startTime = new Date(currentNap.startTime);
+                const elapsed = Date.now() - startTime.getTime();
+                const minutes = Math.floor(elapsed / 60000);
+                const hours = Math.floor(minutes / 60);
+                const remainingMinutes = minutes % 60;
+                
+                document.getElementById('napTimer').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopNapTimer() {
+            if (napTimer) {
+                clearInterval(napTimer);
+                napTimer = null;
+            }
+        }
+
+        // Activity log functions
+        function updateActivityLog() {
+            const logContainer = document.getElementById('activityLog');
+            const today = new Date().toDateString();
+            const todayActivities = activities.filter(a => a.date === today);
+            
+            if (todayActivities.length === 0) {
+                logContainer.innerHTML = `
+                    <div class="empty-state">
+                        No activities recorded yet today.<br>
+                        Start by logging a feeding or nap!
+                    </div>
+                `;
+                return;
+            }
+            
+            logContainer.innerHTML = todayActivities.map(activity => {
+                const time = new Date(activity.timestamp || activity.startTime).toLocaleTimeString([], 
+                    { hour: '2-digit', minute: '2-digit' });
+                
+                if (activity.type === 'feeding') {
+                    return `
+                        <div class="log-item breast">
+                            <div class="log-header">
+                                <span class="log-type">🤱 ${activity.side.charAt(0).toUpperCase() + activity.side.slice(1)} Breast</span>
+                                <span class="log-time">${time}</span>
+                            </div>
+                            <div class="log-details">Feeding session</div>
+                        </div>
+                    `;
+                } else if (activity.type === 'nap') {
+                    const duration = activity.duration ? formatDuration(activity.duration) : 'In progress';
+                    const endTime = activity.endTime ? new Date(activity.endTime).toLocaleTimeString([], 
+                        { hour: '2-digit', minute: '2-digit' }) : 'Ongoing';
+                    
+                    return `
+                        <div class="log-item nap">
+                            <div class="log-header">
+                                <span class="log-type">😴 Nap</span>
+                                <div>
+                                    <button class="edit-btn" onclick="editNap('${activity.id}')">Edit</button>
+                                    <span class="log-time">${time} - ${endTime}</span>
+                                </div>
+                            </div>
+                            <div class="log-details">Duration: ${duration}</div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function updateSummaryStats() {
+            const today = new Date().toDateString();
+            const todayActivities = activities.filter(a => a.date === today);
+            
+            const feedings = todayActivities.filter(a => a.type === 'feeding').length;
+            const naps = todayActivities.filter(a => a.type === 'nap').length;
+            
+            document.getElementById('todayFeedings').textContent = feedings;
+            document.getElementById('todayNaps').textContent = naps;
+        }
+
+        // Edit nap functions
+        function editNap(napId) {
+            const nap = activities.find(a => a.id == napId && a.type === 'nap');
+            if (!nap) return;
+            
+            editingNapId = napId;
+            
+            // Format datetime for input
+            const startTime = new Date(nap.startTime);
+            const endTime = nap.endTime ? new Date(nap.endTime) : null;
+            
+            document.getElementById('napStartTime').value = formatDateTimeLocal(startTime);
+            document.getElementById('napEndTime').value = endTime ? formatDateTimeLocal(endTime) : '';
+            
+            document.getElementById('editNapModal').style.display = 'block';
+        }
+
+        function closeEditNapModal() {
+            document.getElementById('editNapModal').style.display = 'none';
+            editingNapId = null;
+        }
+
+        function saveNapEdit() {
+            if (!editingNapId) return;
+            
+            const startTime = document.getElementById('napStartTime').value;
+            const endTime = document.getElementById('napEndTime').value;
+            
+            if (!startTime) {
+                alert('Start time is required');
+                return;
+            }
+            
+            const napIndex = activities.findIndex(a => a.id == editingNapId);
+            if (napIndex === -1) return;
+            
+            activities[napIndex].startTime = new Date(startTime).toISOString();
+            if (endTime) {
+                activities[napIndex].endTime = new Date(endTime).toISOString();
+                activities[napIndex].duration = new Date(endTime).getTime() - new Date(startTime).getTime();
+            } else {
+                delete activities[napIndex].endTime;
+                delete activities[napIndex].duration;
+            }
+            
+            saveActivities();
+            updateActivityLog();
+            closeEditNapModal();
+        }
+
+        function deleteNap() {
+            if (!editingNapId) return;
+            
+            if (confirm('Are you sure you want to delete this nap?')) {
+                activities = activities.filter(a => a.id != editingNapId);
+                saveActivities();
+                updateActivityLog();
+                updateSummaryStats();
+                closeEditNapModal();
+            }
+        }
+
+        // Utility functions
+        function saveActivities() {
+            localStorage.setItem('babyActivities', JSON.stringify(activities));
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.round(diffMs / 60000);
+            const diffHours = Math.round(diffMs / 3600000);
+            
+            if (diffMins < 60) {
+                return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+            } else if (diffHours < 24) {
+                return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+
+        function formatDuration(ms) {
+            const hours = Math.floor(ms / 3600000);
+            const minutes = Math.floor((ms % 3600000) / 60000);
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else {
+                return `${minutes}m`;
+            }
+        }
+
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        // Modal event listeners
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('editNapModal');
+            if (e.target === modal) {
+                closeEditNapModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeEditNapModal();
+            }
+        });
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

@@ -27,6 +27,42 @@
         .header {
             text-align: center;
             margin-bottom: 30px;
+            position: relative;
+        }
+
+        .language-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 8px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .language-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .language-btn.active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
         }
 
         .header h1 {
@@ -207,6 +243,12 @@
             color: #2d3748;
         }
 
+        .log-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .log-time {
             font-size: 0.85rem;
             color: #718096;
@@ -291,7 +333,7 @@
             color: #4a5568;
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 12px;
             border: 2px solid #e2e8f0;
@@ -300,7 +342,7 @@
             transition: border-color 0.2s;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -398,6 +440,12 @@
             .summary-stats {
                 grid-template-columns: 1fr;
             }
+
+            .language-toggle {
+                position: relative;
+                margin-bottom: 15px;
+                align-self: center;
+            }
         }
 
         /* Empty State */
@@ -420,8 +468,16 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>👶 Baby Care Tracker</h1>
-            <p>Track feeding and sleep for your little one</p>
+            <div class="language-toggle">
+                <button class="language-btn active" id="lang-en" onclick="setLanguage('en')">
+                    🇺🇸
+                </button>
+                <button class="language-btn" id="lang-pt" onclick="setLanguage('pt')">
+                    🇧🇷
+                </button>
+            </div>
+            <h1 id="main-title">👶 Baby Care Tracker</h1>
+            <p id="main-subtitle">Track feeding and sleep for your little one</p>
         </div>
 
         <!-- Summary Stats -->
@@ -429,25 +485,25 @@
             <div class="summary-stats">
                 <div class="stat-card">
                     <div class="stat-number" id="todayFeedings">0</div>
-                    <div class="stat-label">Feedings Today</div>
+                    <div class="stat-label" id="feedings-label">Feedings Today</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="todayNaps">0</div>
-                    <div class="stat-label">Naps Today</div>
+                    <div class="stat-label" id="naps-label">Naps Today</div>
                 </div>
             </div>
         </div>
 
         <!-- Breast Feeding Tracker -->
         <div class="card">
-            <div class="card-title">🤱 Breast Feeding</div>
+            <div class="card-title" id="breast-title">🤱 Breast Feeding</div>
             <div class="breast-toggle-container">
                 <div class="toggle-wrapper">
-                    <span class="toggle-label">Left</span>
+                    <span class="toggle-label" id="left-label">Left</span>
                     <div class="toggle-switch" id="breastToggle" onclick="toggleBreast()">
                         <div class="toggle-knob"></div>
                     </div>
-                    <span class="toggle-label">Right</span>
+                    <span class="toggle-label" id="right-label">Right</span>
                 </div>
                 <div class="last-changed" id="lastChanged">
                     Tap to record first feeding
@@ -457,13 +513,13 @@
 
         <!-- Nap Tracker -->
         <div class="card">
-            <div class="card-title">😴 Sleep Tracking</div>
+            <div class="card-title" id="sleep-title">😴 Sleep Tracking</div>
             <div class="nap-controls">
                 <button class="nap-button" id="napButton" onclick="toggleNap()">
                     Start Nap
                 </button>
                 <div class="current-nap" id="napStatus" style="display: none;">
-                    <div>Nap in progress</div>
+                    <div id="nap-progress-text">Nap in progress</div>
                     <div class="nap-timer" id="napTimer">00:00</div>
                 </div>
             </div>
@@ -471,9 +527,9 @@
 
         <!-- Activity Log -->
         <div class="card">
-            <div class="card-title">📋 Today's Activity</div>
+            <div class="card-title" id="activity-title">📋 Today's Activity</div>
             <div class="activity-log" id="activityLog">
-                <div class="empty-state">
+                <div class="empty-state" id="empty-state">
                     No activities recorded yet today.<br>
                     Start by logging a feeding or nap!
                 </div>
@@ -485,35 +541,208 @@
     <div id="editNapModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <span class="modal-title">Edit Nap</span>
+                <span class="modal-title" id="edit-nap-title">Edit Nap</span>
                 <span class="close" onclick="closeEditNapModal()">&times;</span>
             </div>
             <div class="form-group">
-                <label>Start Time</label>
+                <label id="start-time-label">Start Time</label>
                 <input type="datetime-local" id="napStartTime">
             </div>
             <div class="form-group">
-                <label>End Time (optional)</label>
+                <label id="end-time-label">End Time (optional)</label>
                 <input type="datetime-local" id="napEndTime">
             </div>
             <div class="modal-actions">
-                <button class="btn btn-danger" onclick="deleteNap()">Delete</button>
-                <button class="btn btn-secondary" onclick="closeEditNapModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveNapEdit()">Save</button>
+                <button class="btn btn-danger" id="delete-nap-btn" onclick="deleteNap()">Delete</button>
+                <button class="btn btn-secondary" id="cancel-nap-btn" onclick="closeEditNapModal()">Cancel</button>
+                <button class="btn btn-primary" id="save-nap-btn" onclick="saveNapEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Feeding Modal -->
+    <div id="editFeedingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="edit-feeding-title">Edit Feeding</span>
+                <span class="close" onclick="closeEditFeedingModal()">&times;</span>
+            </div>
+            <div class="form-group">
+                <label id="feeding-time-label">Feeding Time</label>
+                <input type="datetime-local" id="feedingTime">
+            </div>
+            <div class="form-group">
+                <label id="breast-side-label">Breast Side</label>
+                <select id="feedingSide">
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="delete-feeding-btn" onclick="deleteFeeding()">Delete</button>
+                <button class="btn btn-secondary" id="cancel-feeding-btn" onclick="closeEditFeedingModal()">Cancel</button>
+                <button class="btn btn-primary" id="save-feeding-btn" onclick="saveFeedingEdit()">Save</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Language system
+        let currentLanguage = localStorage.getItem('babyTrackerLanguage') || 'en';
+        
+        const translations = {
+            en: {
+                title: '👶 Baby Care Tracker',
+                subtitle: 'Track feeding and sleep for your little one',
+                feedingsLabel: 'Feedings Today',
+                napsLabel: 'Naps Today',
+                breastTitle: '🤱 Breast Feeding',
+                sleepTitle: '😴 Sleep Tracking',
+                activityTitle: '📋 Today\'s Activity',
+                leftLabel: 'Left',
+                rightLabel: 'Right',
+                tapToRecord: 'Tap to record first feeding',
+                lastFeeding: 'Last feeding:',
+                startNap: 'Start Nap',
+                endNap: 'End Nap',
+                napInProgress: 'Nap in progress',
+                emptyState: 'No activities recorded yet today.<br>Start by logging a feeding or nap!',
+                leftBreast: 'Left Breast',
+                rightBreast: 'Right Breast',
+                feedingSession: 'Feeding session',
+                nap: 'Nap',
+                duration: 'Duration:',
+                editNapTitle: 'Edit Nap',
+                editFeedingTitle: 'Edit Feeding',
+                startTimeLabel: 'Start Time',
+                endTimeLabel: 'End Time (optional)',
+                feedingTimeLabel: 'Feeding Time',
+                breastSideLabel: 'Breast Side',
+                deleteBtn: 'Delete',
+                cancelBtn: 'Cancel',
+                saveBtn: 'Save',
+                editBtn: 'Edit',
+                confirmDeleteNap: 'Are you sure you want to delete this nap?',
+                confirmDeleteFeeding: 'Are you sure you want to delete this feeding?',
+                startTimeRequired: 'Start time is required',
+                ongoing: 'Ongoing',
+                ago: 'ago',
+                hoursAgo: 'hours ago',
+                hourAgo: 'hour ago',
+                minsAgo: 'mins ago',
+                minAgo: 'min ago'
+            },
+            pt: {
+                title: '👶 Monitor do Bebê',
+                subtitle: 'Monitore a alimentação e sono do seu pequeno',
+                feedingsLabel: 'Mamadas Hoje',
+                napsLabel: 'Sonecas Hoje',
+                breastTitle: '🤱 Amamentação',
+                sleepTitle: '😴 Controle do Sono',
+                activityTitle: '📋 Atividades de Hoje',
+                leftLabel: 'Esquerdo',
+                rightLabel: 'Direito',
+                tapToRecord: 'Toque para registrar primeira mamada',
+                lastFeeding: 'Última mamada:',
+                startNap: 'Iniciar Soneca',
+                endNap: 'Finalizar Soneca',
+                napInProgress: 'Soneca em andamento',
+                emptyState: 'Nenhuma atividade registrada hoje.<br>Comece registrando uma mamada ou soneca!',
+                leftBreast: 'Seio Esquerdo',
+                rightBreast: 'Seio Direito',
+                feedingSession: 'Sessão de amamentação',
+                nap: 'Soneca',
+                duration: 'Duração:',
+                editNapTitle: 'Editar Soneca',
+                editFeedingTitle: 'Editar Mamada',
+                startTimeLabel: 'Hora de Início',
+                endTimeLabel: 'Hora de Fim (opcional)',
+                feedingTimeLabel: 'Hora da Mamada',
+                breastSideLabel: 'Lado do Seio',
+                deleteBtn: 'Excluir',
+                cancelBtn: 'Cancelar',
+                saveBtn: 'Salvar',
+                editBtn: 'Editar',
+                confirmDeleteNap: 'Tem certeza que deseja excluir esta soneca?',
+                confirmDeleteFeeding: 'Tem certeza que deseja excluir esta mamada?',
+                startTimeRequired: 'Hora de início é obrigatória',
+                ongoing: 'Em andamento',
+                ago: 'atrás',
+                hoursAgo: 'horas atrás',
+                hourAgo: 'hora atrás',
+                minsAgo: 'mins atrás',
+                minAgo: 'min atrás'
+            }
+        };
+
         // Global variables
         let activities = JSON.parse(localStorage.getItem('babyActivities')) || [];
         let currentNap = JSON.parse(localStorage.getItem('currentNap')) || null;
         let breastSide = localStorage.getItem('lastBreastSide') || 'left';
         let napTimer = null;
         let editingNapId = null;
+        let editingFeedingId = null;
+
+        // Language functions
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('babyTrackerLanguage', lang);
+            
+            // Update active language button
+            document.querySelectorAll('.language-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`lang-${lang}`).classList.add('active');
+            
+            updateLanguageDisplay();
+        }
+
+        function updateLanguageDisplay() {
+            const t = translations[currentLanguage];
+            
+            // Update static text elements
+            document.getElementById('main-title').textContent = t.title;
+            document.getElementById('main-subtitle').textContent = t.subtitle;
+            document.getElementById('feedings-label').textContent = t.feedingsLabel;
+            document.getElementById('naps-label').textContent = t.napsLabel;
+            document.getElementById('breast-title').textContent = t.breastTitle;
+            document.getElementById('sleep-title').textContent = t.sleepTitle;
+            document.getElementById('activity-title').textContent = t.activityTitle;
+            document.getElementById('left-label').textContent = t.leftLabel;
+            document.getElementById('right-label').textContent = t.rightLabel;
+            document.getElementById('nap-progress-text').textContent = t.napInProgress;
+            document.getElementById('empty-state').innerHTML = t.emptyState;
+            
+            // Modal elements
+            document.getElementById('edit-nap-title').textContent = t.editNapTitle;
+            document.getElementById('edit-feeding-title').textContent = t.editFeedingTitle;
+            document.getElementById('start-time-label').textContent = t.startTimeLabel;
+            document.getElementById('end-time-label').textContent = t.endTimeLabel;
+            document.getElementById('feeding-time-label').textContent = t.feedingTimeLabel;
+            document.getElementById('breast-side-label').textContent = t.breastSideLabel;
+            document.getElementById('delete-nap-btn').textContent = t.deleteBtn;
+            document.getElementById('cancel-nap-btn').textContent = t.cancelBtn;
+            document.getElementById('save-nap-btn').textContent = t.saveBtn;
+            document.getElementById('delete-feeding-btn').textContent = t.deleteBtn;
+            document.getElementById('cancel-feeding-btn').textContent = t.cancelBtn;
+            document.getElementById('save-feeding-btn').textContent = t.saveBtn;
+            
+            // Update feeding side options
+            const feedingSideSelect = document.getElementById('feedingSide');
+            feedingSideSelect.innerHTML = `
+                <option value="left">${t.leftLabel}</option>
+                <option value="right">${t.rightLabel}</option>
+            `;
+            
+            // Update dynamic content
+            updateBreastToggle();
+            updateNapButton();
+            updateActivityLog();
+        }
 
         // Initialize app
         function initApp() {
+            updateLanguageDisplay();
             updateBreastToggle();
             updateNapButton();
             updateActivityLog();
@@ -548,6 +777,8 @@
         function updateBreastToggle() {
             const toggle = document.getElementById('breastToggle');
             const lastChanged = document.getElementById('lastChanged');
+            const napButton = document.getElementById('napButton');
+            const t = translations[currentLanguage];
             
             if (breastSide === 'right') {
                 toggle.classList.add('active');
@@ -555,14 +786,21 @@
                 toggle.classList.remove('active');
             }
             
+            // Update nap button text
+            if (currentNap) {
+                napButton.textContent = t.endNap;
+            } else {
+                napButton.textContent = t.startNap;
+            }
+            
             // Find last feeding
             const lastFeeding = activities.find(a => a.type === 'feeding');
             if (lastFeeding) {
                 const feedingTime = new Date(lastFeeding.timestamp);
                 const timeAgo = getTimeAgo(feedingTime);
-                lastChanged.textContent = `Last feeding: ${timeAgo}`;
+                lastChanged.textContent = `${t.lastFeeding} ${timeAgo}`;
             } else {
-                lastChanged.textContent = 'Tap to record first feeding';
+                lastChanged.textContent = t.tapToRecord;
             }
         }
 
@@ -616,13 +854,14 @@
         function updateNapButton() {
             const napButton = document.getElementById('napButton');
             const napStatus = document.getElementById('napStatus');
+            const t = translations[currentLanguage];
             
             if (currentNap) {
-                napButton.textContent = 'End Nap';
+                napButton.textContent = t.endNap;
                 napButton.classList.add('stop');
                 napStatus.style.display = 'block';
             } else {
-                napButton.textContent = 'Start Nap';
+                napButton.textContent = t.startNap;
                 napButton.classList.remove('stop');
                 napStatus.style.display = 'none';
             }
@@ -655,12 +894,12 @@
             const logContainer = document.getElementById('activityLog');
             const today = new Date().toDateString();
             const todayActivities = activities.filter(a => a.date === today);
+            const t = translations[currentLanguage];
             
             if (todayActivities.length === 0) {
                 logContainer.innerHTML = `
                     <div class="empty-state">
-                        No activities recorded yet today.<br>
-                        Start by logging a feeding or nap!
+                        ${t.emptyState}
                     </div>
                 `;
                 return;
@@ -671,30 +910,34 @@
                     { hour: '2-digit', minute: '2-digit' });
                 
                 if (activity.type === 'feeding') {
+                    const breastSideText = activity.side === 'left' ? t.leftBreast : t.rightBreast;
                     return `
                         <div class="log-item breast">
                             <div class="log-header">
-                                <span class="log-type">🤱 ${activity.side.charAt(0).toUpperCase() + activity.side.slice(1)} Breast</span>
-                                <span class="log-time">${time}</span>
+                                <span class="log-type">🤱 ${breastSideText}</span>
+                                <div class="log-actions">
+                                    <button class="edit-btn" onclick="editFeeding('${activity.id}')">${t.editBtn}</button>
+                                    <span class="log-time">${time}</span>
+                                </div>
                             </div>
-                            <div class="log-details">Feeding session</div>
+                            <div class="log-details">${t.feedingSession}</div>
                         </div>
                     `;
                 } else if (activity.type === 'nap') {
-                    const duration = activity.duration ? formatDuration(activity.duration) : 'In progress';
+                    const duration = activity.duration ? formatDuration(activity.duration) : t.ongoing;
                     const endTime = activity.endTime ? new Date(activity.endTime).toLocaleTimeString([], 
-                        { hour: '2-digit', minute: '2-digit' }) : 'Ongoing';
+                        { hour: '2-digit', minute: '2-digit' }) : t.ongoing;
                     
                     return `
                         <div class="log-item nap">
                             <div class="log-header">
-                                <span class="log-type">😴 Nap</span>
-                                <div>
-                                    <button class="edit-btn" onclick="editNap('${activity.id}')">Edit</button>
+                                <span class="log-type">😴 ${t.nap}</span>
+                                <div class="log-actions">
+                                    <button class="edit-btn" onclick="editNap('${activity.id}')">${t.editBtn}</button>
                                     <span class="log-time">${time} - ${endTime}</span>
                                 </div>
                             </div>
-                            <div class="log-details">Duration: ${duration}</div>
+                            <div class="log-details">${t.duration} ${duration}</div>
                         </div>
                     `;
                 }
@@ -710,6 +953,61 @@
             
             document.getElementById('todayFeedings').textContent = feedings;
             document.getElementById('todayNaps').textContent = naps;
+        }
+
+        // Edit feeding functions
+        function editFeeding(feedingId) {
+            const feeding = activities.find(a => a.id == feedingId && a.type === 'feeding');
+            if (!feeding) return;
+            
+            editingFeedingId = feedingId;
+            
+            // Format datetime for input
+            const feedingTime = new Date(feeding.timestamp);
+            
+            document.getElementById('feedingTime').value = formatDateTimeLocal(feedingTime);
+            document.getElementById('feedingSide').value = feeding.side;
+            
+            document.getElementById('editFeedingModal').style.display = 'block';
+        }
+
+        function closeEditFeedingModal() {
+            document.getElementById('editFeedingModal').style.display = 'none';
+            editingFeedingId = null;
+        }
+
+        function saveFeedingEdit() {
+            if (!editingFeedingId) return;
+            
+            const feedingTime = document.getElementById('feedingTime').value;
+            const feedingSide = document.getElementById('feedingSide').value;
+            
+            if (!feedingTime) {
+                alert(translations[currentLanguage].startTimeRequired);
+                return;
+            }
+            
+            const feedingIndex = activities.findIndex(a => a.id == editingFeedingId);
+            if (feedingIndex === -1) return;
+            
+            activities[feedingIndex].timestamp = new Date(feedingTime).toISOString();
+            activities[feedingIndex].side = feedingSide;
+            
+            saveActivities();
+            updateActivityLog();
+            closeEditFeedingModal();
+        }
+
+        function deleteFeeding() {
+            if (!editingFeedingId) return;
+            
+            if (confirm(translations[currentLanguage].confirmDeleteFeeding)) {
+                activities = activities.filter(a => a.id != editingFeedingId);
+                saveActivities();
+                updateActivityLog();
+                updateSummaryStats();
+                closeEditFeedingModal();
+            }
         }
 
         // Edit nap functions
@@ -741,7 +1039,7 @@
             const endTime = document.getElementById('napEndTime').value;
             
             if (!startTime) {
-                alert('Start time is required');
+                alert(translations[currentLanguage].startTimeRequired);
                 return;
             }
             
@@ -765,7 +1063,7 @@
         function deleteNap() {
             if (!editingNapId) return;
             
-            if (confirm('Are you sure you want to delete this nap?')) {
+            if (confirm(translations[currentLanguage].confirmDeleteNap)) {
                 activities = activities.filter(a => a.id != editingNapId);
                 saveActivities();
                 updateActivityLog();
@@ -784,11 +1082,20 @@
             const diffMs = now - date;
             const diffMins = Math.round(diffMs / 60000);
             const diffHours = Math.round(diffMs / 3600000);
+            const t = translations[currentLanguage];
             
             if (diffMins < 60) {
-                return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+                if (diffMins === 1) {
+                    return `1 ${t.minAgo}`;
+                } else {
+                    return `${diffMins} ${t.minsAgo}`;
+                }
             } else if (diffHours < 24) {
-                return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+                if (diffHours === 1) {
+                    return `1 ${t.hourAgo}`;
+                } else {
+                    return `${diffHours} ${t.hoursAgo}`;
+                }
             } else {
                 return date.toLocaleDateString();
             }
@@ -817,20 +1124,33 @@
 
         // Modal event listeners
         window.addEventListener('click', function(e) {
-            const modal = document.getElementById('editNapModal');
-            if (e.target === modal) {
+            const napModal = document.getElementById('editNapModal');
+            const feedingModal = document.getElementById('editFeedingModal');
+            if (e.target === napModal) {
                 closeEditNapModal();
+            }
+            if (e.target === feedingModal) {
+                closeEditFeedingModal();
             }
         });
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeEditNapModal();
+                closeEditFeedingModal();
             }
         });
 
         // Initialize app when page loads
-        document.addEventListener('DOMContentLoaded', initApp);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial language button state
+            document.querySelectorAll('.language-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`lang-${currentLanguage}`).classList.add('active');
+            
+            initApp();
+        });
     </script>
 </body>
 </html>

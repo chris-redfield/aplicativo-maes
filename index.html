@@ -700,39 +700,62 @@
         function updateLanguageDisplay() {
             const t = translations[currentLanguage];
             
+            // Helper function to safely update element content
+            function safeUpdateText(id, text) {
+                const element = document.getElementById(id);
+                if (element) element.textContent = text;
+            }
+            
+            function safeUpdateHTML(id, html) {
+                const element = document.getElementById(id);
+                if (element) element.innerHTML = html;
+            }
+            
             // Update static text elements
-            document.getElementById('main-title').textContent = t.title;
-            document.getElementById('main-subtitle').textContent = t.subtitle;
-            document.getElementById('feedings-label').textContent = t.feedingsLabel;
-            document.getElementById('naps-label').textContent = t.napsLabel;
-            document.getElementById('breast-title').textContent = t.breastTitle;
-            document.getElementById('sleep-title').textContent = t.sleepTitle;
-            document.getElementById('activity-title').textContent = t.activityTitle;
-            document.getElementById('left-label').textContent = t.leftLabel;
-            document.getElementById('right-label').textContent = t.rightLabel;
-            document.getElementById('nap-progress-text').textContent = t.napInProgress;
-            document.getElementById('empty-state').innerHTML = t.emptyState;
+            safeUpdateText('main-title', t.title);
+            safeUpdateText('main-subtitle', t.subtitle);
+            safeUpdateText('feedings-label', t.feedingsLabel);
+            safeUpdateText('naps-label', t.napsLabel);
+            safeUpdateText('breast-title', t.breastTitle);
+            safeUpdateText('sleep-title', t.sleepTitle);
+            safeUpdateText('activity-title', t.activityTitle);
+            safeUpdateText('left-label', t.leftLabel);
+            safeUpdateText('right-label', t.rightLabel);
+            safeUpdateText('nap-progress-text', t.napInProgress);
+            safeUpdateHTML('empty-state', t.emptyState);
+            
+            // Update nap button text based on current state
+            const napButton = document.getElementById('napButton');
+            if (napButton) {
+                if (currentNap) {
+                    napButton.textContent = t.endNap;
+                } else {
+                    napButton.textContent = t.startNap;
+                }
+            }
             
             // Modal elements
-            document.getElementById('edit-nap-title').textContent = t.editNapTitle;
-            document.getElementById('edit-feeding-title').textContent = t.editFeedingTitle;
-            document.getElementById('start-time-label').textContent = t.startTimeLabel;
-            document.getElementById('end-time-label').textContent = t.endTimeLabel;
-            document.getElementById('feeding-time-label').textContent = t.feedingTimeLabel;
-            document.getElementById('breast-side-label').textContent = t.breastSideLabel;
-            document.getElementById('delete-nap-btn').textContent = t.deleteBtn;
-            document.getElementById('cancel-nap-btn').textContent = t.cancelBtn;
-            document.getElementById('save-nap-btn').textContent = t.saveBtn;
-            document.getElementById('delete-feeding-btn').textContent = t.deleteBtn;
-            document.getElementById('cancel-feeding-btn').textContent = t.cancelBtn;
-            document.getElementById('save-feeding-btn').textContent = t.saveBtn;
+            safeUpdateText('edit-nap-title', t.editNapTitle);
+            safeUpdateText('edit-feeding-title', t.editFeedingTitle);
+            safeUpdateText('start-time-label', t.startTimeLabel);
+            safeUpdateText('end-time-label', t.endTimeLabel);
+            safeUpdateText('feeding-time-label', t.feedingTimeLabel);
+            safeUpdateText('breast-side-label', t.breastSideLabel);
+            safeUpdateText('delete-nap-btn', t.deleteBtn);
+            safeUpdateText('cancel-nap-btn', t.cancelBtn);
+            safeUpdateText('save-nap-btn', t.saveBtn);
+            safeUpdateText('delete-feeding-btn', t.deleteBtn);
+            safeUpdateText('cancel-feeding-btn', t.cancelBtn);
+            safeUpdateText('save-feeding-btn', t.saveBtn);
             
             // Update feeding side options
             const feedingSideSelect = document.getElementById('feedingSide');
-            feedingSideSelect.innerHTML = `
-                <option value="left">${t.leftLabel}</option>
-                <option value="right">${t.rightLabel}</option>
-            `;
+            if (feedingSideSelect) {
+                feedingSideSelect.innerHTML = `
+                    <option value="left">${t.leftLabel}</option>
+                    <option value="right">${t.rightLabel}</option>
+                `;
+            }
             
             // Update dynamic content
             updateBreastToggle();
@@ -906,8 +929,7 @@
             }
             
             logContainer.innerHTML = todayActivities.map(activity => {
-                const time = new Date(activity.timestamp || activity.startTime).toLocaleTimeString([], 
-                    { hour: '2-digit', minute: '2-digit' });
+                const time = formatTime(new Date(activity.timestamp || activity.startTime));
                 
                 if (activity.type === 'feeding') {
                     const breastSideText = activity.side === 'left' ? t.leftBreast : t.rightBreast;
@@ -925,8 +947,7 @@
                     `;
                 } else if (activity.type === 'nap') {
                     const duration = activity.duration ? formatDuration(activity.duration) : t.ongoing;
-                    const endTime = activity.endTime ? new Date(activity.endTime).toLocaleTimeString([], 
-                        { hour: '2-digit', minute: '2-digit' }) : t.ongoing;
+                    const endTime = activity.endTime ? formatTime(new Date(activity.endTime)) : t.ongoing;
                     
                     return `
                         <div class="log-item nap">
@@ -1075,6 +1096,16 @@
         // Utility functions
         function saveActivities() {
             localStorage.setItem('babyActivities', JSON.stringify(activities));
+        }
+
+        function formatTime(date) {
+            // Use 24-hour format for Portuguese, 12-hour for English
+            const hour12 = currentLanguage === 'en';
+            return date.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: hour12
+            });
         }
 
         function getTimeAgo(date) {
